@@ -1,0 +1,20 @@
+{
+	"name": "7_create_silver_calendar",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/ldw"
+		},
+		"content": {
+			"query": "USE nyc_taxi_ldw;\n\nIF OBJECT_ID('silver.calendar') IS NOT NULL DROP EXTERNAL TABLE silver.calendar\nGO\n\nCREATE EXTERNAL TABLE silver.calendar\n    WITH (\n        data_source = nyc_taxi_src,\n        location = 'silver/calendar',\n        file_format = parquet_file_format\n    )\nAS\nSELECT *\n    from bronze.calendar;\n\nSELECT * FROM silver.calendar;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

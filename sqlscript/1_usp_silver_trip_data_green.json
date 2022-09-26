@@ -1,0 +1,20 @@
+{
+	"name": "1_usp_silver_trip_data_green",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/ldw/usp"
+		},
+		"content": {
+			"query": "USE nyc_taxi_ldw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_trip_data_green\n@year VARCHAR(4),\n@month VARCHAR(2)\nAS\nBEGIN\n\nDECLARE @create_sql_stmt VARCHAR(MAX),\n        @drop_sql_stmt VARCHAR(MAX);\n\nSET @create_sql_stmt = \n    'CREATE EXTERNAL TABLE silver.trip_data_green_' + @year + '_' + @month +\n    'WITH\n    (\n        DATA_SOURCE = nyc_taxi_src,\n        LOCATION = ''silver/trip_data_green/year='+@year+'/month='+''',\n        FILE_FORMAT = parquet_file_format\n    ) \nAS\nSELECT *\nFROM bronze.vw_trip_data_green_csv\nWHERE year = ''' + @year + '''\n    AND month = ''' + @month + '''';\n\nprint(@create_sql_stmt)\nEXEC sp_executesql @create_sql_stmt;\n\nSET @drop_sql_stmt = 'DROP EXTERNAL TABLE silver.trip_data_green_' + @year + '_' + @month;\nprint(@drop_sql_stmt)\nEXEC sp_executesql @drop_sql_stmt;\nend;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
