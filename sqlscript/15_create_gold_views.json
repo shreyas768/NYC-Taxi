@@ -1,0 +1,20 @@
+{
+	"name": "15_create_gold_views",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/ldw"
+		},
+		"content": {
+			"query": "USE nyc_taxi_ldw\n\n\n--create view for trip_data_green\nDROP VIEW IF EXISTS gold.vw_trip_data_green_csv\nGO\nCREATE VIEW gold.vw_trip_data_green_csv\nAS\nSELECT\n    \n    result.filepath(1) as year,\n    result.filepath(2) as month,\n    result.*\nFROM\n    OPENROWSET(\n        BULK 'gold/trip_data_green_csv/year=*/month=*/*.parquet', DATA_SOURCE = 'nyc_taxi_src',\n        FORMAT = 'PARQUET'\n    )WITH(\n        borough VARCHAR(15),\n        trip_date DATE,\n        trip_day VARCHAR(10),\n        trip_day_weekend_ind CHAR(1),\n        card_trip_count INT,\n        cash_trip_count INT,\n        street_hail_trip_count INT,\n        dispatch_trip_count INT,\n        trip_distance FLOAT,\n        trip_duration INT,\n        fare_amount FLOAT\n        ) AS [result]\nGO\n\nSELECT TOP(100) * from gold.vw_trip_data_green_csv\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
