@@ -1,0 +1,10 @@
+{
+	"name": "ls_synapse_course_dl_shreyas",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://synapsecoursedlshreyas.dfs.core.windows.net/"
+		}
+	}
+}
