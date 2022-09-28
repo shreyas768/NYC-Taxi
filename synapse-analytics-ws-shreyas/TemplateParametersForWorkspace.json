@@ -4,6 +4,9 @@
 	"parameters": {
 		"workspaceName": {
 			"value": "synapse-analytics-ws-shreyas"
+		},
+		"ls_synapse_course_dl_shreyas_properties_typeProperties_url": {
+			"value": "https://synapsecoursedlshreyas.dfs.core.windows.net/"
 		}
 	}
 }

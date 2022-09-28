@@ -6,6 +6,10 @@
 			"type": "string",
 			"metadata": "Workspace name",
 			"defaultValue": "synapse-analytics-ws-shreyas"
+		},
+		"ls_synapse_course_dl_shreyas_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://synapsecoursedlshreyas.dfs.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -722,6 +726,19 @@
 					"resultLimit": 5000
 				},
 				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_synapse_course_dl_shreyas')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_synapse_course_dl_shreyas_properties_typeProperties_url')]"
+				}
 			},
 			"dependsOn": []
 		}
