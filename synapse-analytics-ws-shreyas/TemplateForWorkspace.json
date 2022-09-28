@@ -7,6 +7,10 @@
 			"metadata": "Workspace name",
 			"defaultValue": "synapse-analytics-ws-shreyas"
 		},
+		"ls_serverless_sql_pool_db_nyc_taxi_ldw_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_serverless_sql_pool_db_nyc_taxi_ldw'"
+		},
 		"ls_synapse_course_dl_shreyas_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://synapsecoursedlshreyas.dfs.core.windows.net/"
@@ -16,6 +20,162 @@
 		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_create_silver_taxi_zone')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Delete Silver Taxi Zone Folder",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_silver_taxi_zone",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"logStorageSettings": {
+								"linkedServiceName": {
+									"referenceName": "ls_synapse_course_dl_shreyas",
+									"type": "LinkedServiceReference"
+								},
+								"path": "nyc-taxi-data/silver/taxi_zone"
+							},
+							"enableLogging": true,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Create Silver Taxi Zone",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Delete Silver Taxi Zone Folder",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_serverless_sql_pool_db_nyc_taxi_ldw",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF OBJECT_ID('silver.taxi_zone') IS NOT NULL DROP EXTERNAL TABLE silver.taxi_zone;\n"
+								},
+								{
+									"type": "NonQuery",
+									"text": "CREATE EXTERNAL TABLE silver.taxi_zone\n    WITH (\n        data_source = nyc_taxi_src,\n        location = 'silver/taxi_zone',\n        file_format = parquet_file_format\n    )\nAS\nSELECT *\n    from bronze.taxi_zone;"
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/ds_silver_taxi_zone')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_serverless_sql_pool_db_nyc_taxi_ldw')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_synapse_course_dl_shreyas')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ds_silver_taxi_zone')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_synapse_course_dl_shreyas",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "silver/taxi_zone",
+						"fileSystem": "nyc-taxi-data"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "location_id",
+						"type": "INT_16"
+					},
+					{
+						"name": "borough",
+						"type": "UTF8"
+					},
+					{
+						"name": "zone",
+						"type": "UTF8"
+					},
+					{
+						"name": "service_zone",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_synapse_course_dl_shreyas')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_serverless_sql_pool_db_nyc_taxi_ldw')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_serverless_sql_pool_db_nyc_taxi_ldw_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_synapse_course_dl_shreyas')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_synapse_course_dl_shreyas_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('workspaceName'), '/10_check_for_duplicates')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
@@ -726,19 +886,6 @@
 					"resultLimit": 5000
 				},
 				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ls_synapse_course_dl_shreyas')]",
-			"type": "Microsoft.Synapse/workspaces/linkedServices",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobFS",
-				"typeProperties": {
-					"url": "[parameters('ls_synapse_course_dl_shreyas_properties_typeProperties_url')]"
-				}
 			},
 			"dependsOn": []
 		}

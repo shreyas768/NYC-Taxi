@@ -5,6 +5,9 @@
 		"workspaceName": {
 			"value": "synapse-analytics-ws-shreyas"
 		},
+		"ls_serverless_sql_pool_db_nyc_taxi_ldw_connectionString": {
+			"value": ""
+		},
 		"ls_synapse_course_dl_shreyas_properties_typeProperties_url": {
 			"value": "https://synapsecoursedlshreyas.dfs.core.windows.net/"
 		}
